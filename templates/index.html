@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>이름 입력</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background-color: #F9F8CC;
+    }
+
+    .container {
+      text-align: center;
+    }
+
+    #admin-button {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-size: 14px;
+      padding: 10px 15px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    #admin-button:hover {
+      background-color: #0056b3;
+    }
+
+    #main-button {
+      font-size: 24px;
+      padding: 20px 40px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    #main-button:hover {
+      background-color: #218838;
+    }
+
+    #info-image {
+      margin: 20px 0;
+      max-width: 100%;
+      height: auto;
+    }
+  </style>
+</head>
+<body>
+  <a id="admin-button" href="#" onclick="handleAdminButtonClick()">관리자 페이지</a>
+  <div class="container">
+    <h1>대현고등학교 <br>스마트 우산 대여 사이트</h1>
+    <!-- 이미지 삽입 -->
+    <img id="info-image" src="https://github.com/user-attachments/assets/b8ab6f18-f846-41af-b971-6bcddb3eeaca" alt="정보 이미지" style="width: 50%; height: auto;">
+
+    <br>
+    <button id="main-button" onclick="handleButtonClick()">대여</button>
+    <br><br>
+    <h4>Made by 대현고등학교 이동주</h4>
+  </div>
+  <script>
+    async function handleButtonClick() {
+      const studentId = prompt("학번을 입력하세요:", "10101");
+      if (studentId) {
+        const name = prompt("이름을 입력하세요:", "홍길동");
+        if (name) {
+          // 알림 창 생성
+          const message = `3일 내로 3층 WeClass옆 회의실로 우산을 반납해야 합니다. 반납하지 않거나, 해당 내용에 동의하지 않을 시 우산 대여가 불가합니다.`;
+          const userConfirmed = confirm(message);
+
+          if (userConfirmed) {
+            // 서버로 데이터 전송하여 중복 확인
+            const checkResponse = await fetch('/check_existing', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ name, student_id: studentId })
+            });
+
+            const checkResult = await checkResponse.json();
+            if (checkResult.exists) {
+              alert('이미 대여하셨습니다. 우산을 반납하고 이용해주세요.');
+            } else {
+              // 확인을 눌렀을 때 서버로 데이터 전송
+              const response = await fetch('/', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ name, student_id: studentId })
+              });
+              const result = await response.json();
+              if (result.success) {
+                alert('입력되었습니다!');
+              } else {
+                alert('오류가 발생했습니다: ' + (result.error || '알 수 없는 오류'));
+              }
+            }
+          } else {
+            alert('취소되었습니다.');
+          }
+        } else {
+          alert('이름을 입력하지 않았습니다.');
+        }
+      } else {
+        alert('학번을 입력하지 않았습니다.');
+      }
+    }
+
+    function handleAdminButtonClick() {
+      const password = prompt("관리자 비밀번호를 입력하세요:");
+      if (password) {
+        // 서버에 비밀번호를 확인 요청
+        fetch('/check_password', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ password })
+        })
+        .then(response => response.json())
+        .then(result => {
+          if (result.success) {
+            window.location.href = '/admin'; // 비밀번호가 맞으면 관리자 페이지로 이동
+          } else {
+            alert('비밀번호가 일치하지 않습니다.');
+          }
+        })
+        .catch(error => alert('서버 오류: ' + error.message));
+      } else {
+        alert('비밀번호를 입력하지 않았습니다.');
+      }
+    }
+  </script>
+</body>
+</html>

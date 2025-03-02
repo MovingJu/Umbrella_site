@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>관리자 페이지</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+  <style>
+    body {
+      background-color: #f8f9fa;
+    }
+    .container {
+      margin-top: 20px;
+      margin-bottom: 20px;
+    }
+    h1 {
+      margin-bottom: 20px;
+      font-size: 24px;
+    }
+    .btn {
+      margin: 5px;
+      padding: 10px 15px; /* 버튼의 높이 조정 */
+      font-size: 16px; /* 버튼의 글씨 크기 조정 */
+    }
+    .btn-primary, .btn-danger, .btn-info {
+      width: 100%;
+      max-width: 300px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>우산 대여자 명단</h1>
+    <!-- 테이블을 모바일에서도 잘 보이도록 반응형으로 설정 -->
+    <div class="table-responsive">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>시간</th>
+            <th>학번</th>
+            <th>이름</th>
+            <th>삭제</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+          <tr id="row-{{ row['학번'] }}-{{ row['이름'] }}">
+            <td>{{ row['시간'] }}</td>
+            <td>{{ row['학번'] }}</td>
+            <td>{{ row['이름'] }}</td>
+            <td>
+              <button class="btn btn-danger btn-sm" onclick="deleteRow('{{ row['학번']}}', '{{ row['이름']}}')">삭제</button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <br>
+    <!-- 버튼을 중앙에 배치하고 폭을 조정 -->
+    <a class="btn btn-primary" href="/download_csv">CSV 파일 다운로드</a>
+    <a class="btn btn-secondary" href="/">홈으로</a>
+    <a class="btn btn-info" href="mailto:22158@daehyun.hs.kr?subject=코드 문의&body=문의 내용을 작성해주세요">코드 문의</a>
+  </div>
+
+  <script>
+    async function deleteRow(studentId, name) {
+      if (confirm('정말로 이 행을 삭제하시겠습니까?')) {
+        try {
+          const response = await fetch('/delete_row', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+              student_id: studentId,
+              name: name,
+            })
+          });
+          
+          if (response.ok) {
+            // 행을 페이지에서 제거
+            document.getElementById(`row-${studentId}-${name}`).remove();
+            alert('행이 삭제되었습니다.');
+          } else {
+            alert('행 삭제 중 오류가 발생했습니다.');
+          }
+        } catch (error) {
+          alert('서버 오류: ' + error.message);
+        }
+      }
+    }
+  </script>
+</body>
+</html>
